@@ -1,9 +1,28 @@
+import threading
+import os
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
 TOKEN = "8051897019:AAGoKF_s5t3AWuWn6XtZXzGB0vPnjohyTRM"
 
 # Главное меню
+
+
+# Фоновый веб-сервер-заглушка
+class DummyServer(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b'Bot is running')
+
+def run_dummy_server():
+    port = int(os.environ.get("PORT", 8080))
+    httpd = HTTPServer(("0.0.0.0", port), DummyServer)
+    httpd.serve_forever()
+
+
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("Офф. сайт ПДР", url="https://рф-поиск.рф/")],
@@ -49,6 +68,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif query.data == "main_menu":
         await start(update, context)
+
+# Запуск заглушки в фоновом потоке
+threading.Thread(target=run_dummy_server).start()
 
 # Запуск бота
 app = ApplicationBuilder().token(TOKEN).build()
