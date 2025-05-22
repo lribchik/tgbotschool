@@ -1,7 +1,7 @@
 import threading
 import os
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, InputFile
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
 TOKEN = "8051897019:AAGoKF_s5t3AWuWn6XtZXzGB0vPnjohyTRM"
@@ -35,19 +35,10 @@ WELCOME_TEXT = (
 )
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    with open("media/i (1).webp", "rb") as photo:
-        if update.message:
-            await update.message.reply_photo(
-                photo=InputFile(photo),
-                caption=WELCOME_TEXT,
-                reply_markup=main_keyboard
-            )
-        else:
-            await update.callback_query.message.reply_photo(
-                photo=InputFile(photo),
-                caption=WELCOME_TEXT,
-                reply_markup=main_keyboard
-            )
+    if update.message:
+        await update.message.reply_text(WELCOME_TEXT, reply_markup=main_keyboard)
+    else:
+        await update.callback_query.message.edit_text(WELCOME_TEXT, reply_markup=main_keyboard)
 
 # Обработка кнопок
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -68,12 +59,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("Феникс", url="https://vk.com/public173598260")],
             [InlineKeyboardButton("🔙 Назад в главное меню", callback_data="main_menu")],
         ]
-        with open("media/i (2).webp", "rb") as photo:
-            await query.message.reply_photo(
-                photo=InputFile(photo),
-                caption=text,
-                reply_markup=InlineKeyboardMarkup(keyboard)
-            )
+        await query.message.edit_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
 
     elif query.data == "category_materials":
         keyboard = [
