@@ -1,15 +1,12 @@
 import threading
 import os
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, InputFile
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
 TOKEN = "8051897019:AAGoKF_s5t3AWuWn6XtZXzGB0vPnjohyTRM"
 
-# Главное меню
-
-
-# Фоновый веб-сервер-заглушка
+# Веб-сервер-заглушка
 class DummyServer(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
@@ -21,19 +18,36 @@ def run_dummy_server():
     httpd = HTTPServer(("0.0.0.0", port), DummyServer)
     httpd.serve_forever()
 
+# Главное меню
+main_keyboard = InlineKeyboardMarkup([
+    [InlineKeyboardButton("Офф. сайт ПДР", url="https://рф-поиск.рф/")],
+    [InlineKeyboardButton("Поисковые отряды Тюмени", callback_data="category_tymen")],
+    [InlineKeyboardButton("Полезные материалы", callback_data="category_materials")]
+])
 
+WELCOME_TEXT = (
+    "Поисковое движение России — общероссийское общественное поисковое движение, цель которого — "
+    "увековечить память погибших при защите Отечества. Движение создано в апреле 2013 года и работает в 84 субъектах "
+    "Российской Федерации, объединяя 1500 поисковых отрядов страны. Организуются экспедиции в места боёв Великой "
+    "Отечественной войны, массовых захоронений мирных жителей. Они также помогают людям в поиске их погибших или "
+    "пропавших без вести близких, ведут работу в архивах для установления личностей найденных на полях сражений.\n\n"
+    "Выберите раздел:"
+)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [
-        [InlineKeyboardButton("Офф. сайт ПДР", url="https://рф-поиск.рф/")],
-        [InlineKeyboardButton("Поисковые отряды Тюмени", callback_data="category_tymen")],
-        [InlineKeyboardButton("Полезные материалы", callback_data="category_materials")],
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    if update.message:
-        await update.message.reply_text("Выберите раздел:", reply_markup=reply_markup)
-    else:
-        await update.callback_query.message.edit_text("Выберите раздел:", reply_markup=reply_markup)
+    with open("media/i (1).webp", "rb") as photo:
+        if update.message:
+            await update.message.reply_photo(
+                photo=InputFile(photo),
+                caption=WELCOME_TEXT,
+                reply_markup=main_keyboard
+            )
+        else:
+            await update.callback_query.message.reply_photo(
+                photo=InputFile(photo),
+                caption=WELCOME_TEXT,
+                reply_markup=main_keyboard
+            )
 
 # Обработка кнопок
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -54,7 +68,12 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("Феникс", url="https://vk.com/public173598260")],
             [InlineKeyboardButton("🔙 Назад в главное меню", callback_data="main_menu")],
         ]
-        await query.message.edit_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+        with open("media/i (2).webp", "rb") as photo:
+            await query.message.reply_photo(
+                photo=InputFile(photo),
+                caption=text,
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
 
     elif query.data == "category_materials":
         keyboard = [
@@ -69,13 +88,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == "main_menu":
         await start(update, context)
 
-# Запуск заглушки в фоновом потоке
+# Запуск
 threading.Thread(target=run_dummy_server).start()
 
-# Запуск бота
 app = ApplicationBuilder().token(TOKEN).build()
-
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CallbackQueryHandler(button_handler))
-
 app.run_polling()
