@@ -1,7 +1,7 @@
 import threading
 import os
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, InputFile
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
 TOKEN = "8051897019:AAGoKF_s5t3AWuWn6XtZXzGB0vPnjohyTRM"
@@ -35,19 +35,10 @@ WELCOME_TEXT = (
 )
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    with open("media/i (1).webp", "rb") as photo:
-        if update.message:
-            await update.message.reply_photo(
-                photo=InputFile(photo),
-                caption=WELCOME_TEXT,
-                reply_markup=main_keyboard
-            )
-        else:
-            await update.callback_query.message.reply_photo(
-                photo=InputFile(photo),
-                caption=WELCOME_TEXT,
-                reply_markup=main_keyboard
-            )
+    if update.message:
+        await update.message.reply_text(WELCOME_TEXT, reply_markup=main_keyboard)
+    else:
+        await update.callback_query.message.edit_text(WELCOME_TEXT, reply_markup=main_keyboard)
 
 # Обработка кнопок
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -66,14 +57,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("Cавояр", url="https://vk.com/savoyar72")],
             [InlineKeyboardButton("Память-Сердца", url="https://vk.com/club17624181")],
             [InlineKeyboardButton("Феникс", url="https://vk.com/public173598260")],
-            [InlineKeyboardButton("🔙 Назад в главное меню", callback_data="main_menu")],
+            [InlineKeyboardButton("🔙 Назад в главное меню", callback_data="main_menu_button")],  # <-- изменено
         ]
-        with open("media/i (2).webp", "rb") as photo:
-            await query.message.reply_photo(
-                photo=InputFile(photo),
-                caption=text,
-                reply_markup=InlineKeyboardMarkup(keyboard)
-            )
+        await query.message.edit_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
 
     elif query.data == "category_materials":
         keyboard = [
@@ -81,11 +67,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("Память Народа", url="https://pamyat-naroda.ru/")],
             [InlineKeyboardButton("Мемориал", url="https://obd-memorial.ru/html/")],
             [InlineKeyboardButton("Книга Памяти Тюмень", url="https://память.72to.ru/")],
-            [InlineKeyboardButton("🔙 Назад в главное меню", callback_data="main_menu")],
+            [InlineKeyboardButton("🔙 Назад в главное меню", callback_data="main_menu_button")],  # <-- изменено
         ]
         await query.message.edit_text("Полезные материалы:", reply_markup=InlineKeyboardMarkup(keyboard))
 
-    elif query.data == "main_menu":
+    elif query.data == "main_menu_button":
         await start(update, context)
 
 # Запуск
